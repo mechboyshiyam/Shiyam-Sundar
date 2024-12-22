@@ -37,43 +37,58 @@
     
         // Visitor tracking function
         async function trackVisitor() {
-            try {
-                // Increment visit count in localStorage
-                let visitCount = parseInt(localStorage.getItem('visitCount') || '0');
-                visitCount++;
-                localStorage.setItem('visitCount', visitCount);
-    
-                // Fetch visitor details from IP API
-                const response = await fetch('https://api.ipapi.com/api/check?access_key=544aee120fc7b681d2ce3e38185b618b'); // Replace YOUR_API_KEY
-                const data = await response.json();
-    
-                // MockAPI URL or any other API service
-                const backendURL = 'https://67659571410f849996559046.mockapi.io/api/v1/Resources'; // Replace with actual URL
-    
-                // Send visitor data to the backend API
-                await fetch(backendURL, {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        timestamp: new Date().toISOString(),
-                        ip: data.ip,
-                        country: data.country_name,
-                        city: data.city,
-                        browser: navigator.userAgent,
-                        referrer: document.referrer || 'Direct',
-                        visitCount: visitCount,
-                        lastVisitDuration: localStorage.getItem('lastVisitDuration') || '0',
-                    }),
-                });
-            } catch (error) {
-                console.error('Error tracking visitor:', error);
-            }
+    try {
+        const sessionId = sessionStorage.getItem('sessionId');
+        if (sessionId) {
+            console.log('Visitor data already sent for this session.');
+            return;
         }
-    
-        // Call the tracking function when the page loads
-        trackVisitor();
+
+        // Generate and save a session ID to prevent duplicate submissions
+        const newSessionId = Date.now() + '-' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('sessionId', newSessionId);
+
+        // Increment visit count in localStorage
+        let visitCount = parseInt(localStorage.getItem('visitCount') || '0');
+        visitCount++;
+        localStorage.setItem('visitCount', visitCount);
+
+        // Fetch visitor details from IP API
+        const response = await fetch('https://api.ipapi.com/api/check?access_key=544aee120fc7b681d2ce3e38185b618b');
+        const data = await response.json();
+
+        // MockAPI URL
+        const backendURL = 'https://67659571410f849996559046.mockapi.io/api/v1/Resources';
+
+        // Prepare visitor payload
+        const visitorPayload = {
+            timestamp: new Date().toISOString(),
+            ip: data.ip,
+            country: data.country_name || 'Unknown',
+            city: data.city || 'Unknown',
+            browser: navigator.userAgent,
+            referrer: document.referrer || 'Direct',
+            visitCount: visitCount,
+            lastVisitDuration: parseInt(localStorage.getItem('lastVisitDuration') || '0'),
+        };
+
+        // Send visitor data to the backend
+        await fetch(backendURL, {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+            body: JSON.stringify(visitorPayload),
+        });
+
+        console.log('Visitor data sent:', visitorPayload);
+    } catch (error) {
+        console.error('Error tracking visitor:', error);
+    }
+}
+
+// Call the tracking function when the page loads
+trackVisitor();
     </script>
     
         
@@ -112,7 +127,7 @@
     <div class="container">
         <div class="row">
             <div class="about-col-1">
-                <img src="Assets/images/About/Shiyam.png">
+                <img src="Assets/images/About/ShiyamBG.png">
             </div>
             <div class="about-col-2">
                 <h1 class="sub-title">About Me</h1>

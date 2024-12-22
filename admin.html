@@ -2,6 +2,7 @@
 <html>
 <head>
     <title>Admin Dashboard</title>
+    <link rel="stylesheet" href="admin-style.css">
     <style>
          .dashboard {
             padding: 20px;
@@ -113,65 +114,62 @@
 
         // Load visitor data
         async function loadVisitorData() {
-            try {
-                const response = await fetch('YOUR_BACKEND_URL/get-visitors');
-                const data = await response.json();
-                
-                // Update dashboard statistics
-                document.getElementById('totalVisitors').textContent = data.totalVisitors;
-                document.getElementById('todayVisitors').textContent = data.todayVisitors;
-                document.getElementById('onlineUsers').textContent = data.onlineUsers;
-                
-                // Calculate and display average time spent
-                const avgTime = calculateAverageTime(data.visitors);
-                document.getElementById('avgTimeSpent').textContent = avgTime;
-                
-                // Count return visitors
-                const returnVisitors = data.visitors.filter(v => v.visitCount > 1).length;
-                document.getElementById('returnVisitors').textContent = returnVisitors;
+    try {
+        const response = await fetch('https://67659571410f849996559046.mockapi.io/api/v1/Resources');
+        const visitors = await response.json();
 
-                // Populate visitors table
-                const visitorsList = document.getElementById('visitorsList');
-                visitorsList.innerHTML = '';
-                data.visitors.forEach(visitor => {
-                    const timeSpent = formatDuration(visitor.lastVisitDuration);
-                    visitorsList.innerHTML += `
-                        <tr>
-                            <td>${new Date(visitor.timestamp).toLocaleString()}</td>
-                            <td>${visitor.country}</td>
-                            <td>${visitor.city}</td>
-                            <td>${visitor.visitCount}</td>
-                            <td>${timeSpent}</td>
-                            <td>${visitor.browser}</td>
-                            <td>${visitor.referrer || 'Direct'}</td>
-                        </tr>
-                    `;
-                });
-            } catch (error) {
-                console.error('Error loading visitor data:', error);
-            }
-        }
+        // Filter visitors who visited today
+        const today = new Date().toDateString();
+        const todayVisitors = visitors.filter(v => new Date(v.timestamp).toDateString() === today);
 
-        // Format duration from seconds to readable time
-        function formatDuration(seconds) {
-            if (seconds < 60) return `${seconds}s`;
-            const minutes = Math.floor(seconds / 60);
-            const remainingSeconds = seconds % 60;
-            return `${minutes}m ${remainingSeconds}s`;
-        }
+        // Update dashboard statistics
+        document.getElementById('totalVisitors').textContent = visitors.length;
+        document.getElementById('todayVisitors').textContent = todayVisitors.length;
+        document.getElementById('onlineUsers').textContent = 0; // Remove simulated data
 
         // Calculate average time spent
-        function calculateAverageTime(visitors) {
-            const totalDuration = visitors.reduce((sum, v) => sum + parseInt(v.lastVisitDuration), 0);
-            const avgSeconds = Math.round(totalDuration / visitors.length);
-            return formatDuration(avgSeconds);
-        }
+        const totalDuration = visitors.reduce((sum, v) => sum + parseInt(v.lastVisitDuration || 0), 0);
+        const avgDuration = totalDuration / visitors.length || 0;
+        document.getElementById('avgTimeSpent').textContent = formatDuration(avgDuration);
 
-        // Load data when page loads
-        loadVisitorData();
+        // Count return visitors
+        const returnVisitors = visitors.filter(v => v.visitCount > 1).length;
+        document.getElementById('returnVisitors').textContent = returnVisitors;
 
-        // Refresh data every minute
-        setInterval(loadVisitorData, 60000);
+        // Populate visitors table
+        const visitorsList = document.getElementById('visitorsList');
+        visitorsList.innerHTML = visitors
+            .map(
+                visitor => `
+                <tr>
+                    <td>${new Date(visitor.timestamp).toLocaleString()}</td>
+                    <td>${visitor.country}</td>
+                    <td>${visitor.city}</td>
+                    <td>${visitor.visitCount}</td>
+                    <td>${formatDuration(visitor.lastVisitDuration)}</td>
+                    <td>${visitor.browser}</td>
+                    <td>${visitor.referrer || 'Direct'}</td>
+                </tr>`
+            )
+            .join('');
+    } catch (error) {
+        console.error('Error loading visitor data:', error);
+    }
+}
+
+// Format duration from seconds to readable time
+function formatDuration(seconds) {
+    if (seconds < 60) return `${seconds}s`;
+    const minutes = Math.floor(seconds / 60);
+    const remainingSeconds = seconds % 60;
+    return `${minutes}m ${remainingSeconds}s`;
+}
+
+// Load data when page loads
+loadVisitorData();
+
+// Refresh data every minute
+setInterval(loadVisitorData, 60000);
     </script>
 </body>
 </html>

@@ -134,15 +134,15 @@ nav ul li a:hover::after{
 }
 
 .about-col-1{
-    flex-basis: 35%;
-    padding-top: 8%;
+    flex-basis: 40%;
+    padding-top: 5%;
 }
 .about-col-1 img{
     width: 100%;
     border-radius: 15px;
 }
 .about-col-2{
-    flex-basis: 60%;
+    flex-basis: 55%;
     padding-top: 3%;
 }
 
